@@ -2,6 +2,7 @@
 #include "Cafe/HW/Espresso/PPCCallback.h"
 #include "Cafe/OS/RPL/rpl.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Thread.h"
+#include "Common/android/PerformanceCores.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Time.h"
 #include "Cafe/OS/libs/coreinit/coreinit_Alarm.h"
 #include "Cafe/OS/libs/coreinit/coreinit_GHS.h"
@@ -1428,6 +1429,8 @@ namespace coreinit
 	void OSSchedulerCoreEmulationThread(void* _assignedCoreIndex)
 	{
 		SetThreadName(fmt::format("OSSched[core={}]", (uintptr_t)_assignedCoreIndex).c_str());
+		if (PerformanceCores::PinCurrentThread() && (uintptr_t)_assignedCoreIndex == 0)
+			cemuLog_log(LogType::Force, "Emulation threads restricted to the performance cores");
 		t_assignedCoreIndex = (sint32)(uintptr_t)_assignedCoreIndex;
 
 		ConfigureHostFloatingPointEnvironment();
