@@ -71,9 +71,13 @@ jobs:
           if [[ -n "$ANDROID_STORE_FILE_BASE64" ]]; then
             base64 --decode <<< "${ANDROID_STORE_FILE_BASE64}" > store.jks
             export ANDROID_STORE_FILE=$(pwd)/store.jks
-            echo "Assinando com a chave fixa dos secrets."
+            echo "Assinando com a chave dos secrets."
           else
-            echo "Sem KEYSTORE_BASE64: o APK sai com a chave de debug."
+            # Chave fixa do repositório (privado): o APK sempre sai com a mesma assinatura.
+            export ANDROID_STORE_FILE=$GITHUB_WORKSPACE/.github/signing/cemu-android.jks
+            export ANDROID_KEY_STORE_PASSWORD="xL98Wo1DkSKyMhmA4QAQhMRMw91RF_ks"
+            export ANDROID_KEY_ALIAS=cemu
+            echo "Assinando com a chave fixa do repositório."
           fi
           ./gradlew assembleRelease
 
