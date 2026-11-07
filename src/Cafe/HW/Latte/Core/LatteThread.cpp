@@ -8,6 +8,7 @@
 #include "Cafe/GraphicPack/GraphicPack2.h"
 #include "WindowSystem.h"
 #include "Common/android/PerformanceCores.h"
+#include "config/CemuConfig.h"
 
 #include "Cafe/HW/Latte/Core/LatteBufferCache.h"
 
@@ -116,7 +117,8 @@ void LatteThread_HandleOSScreen()
 int Latte_ThreadEntry()
 {
 	SetThreadName("LatteThread");
-	PerformanceCores::PinCurrentThread();
+	if (GetConfig().pin_performance_cores)
+		PerformanceCores::PinCurrentThread();
 	sint32 w,h;
 	WindowSystem::GetWindowPhysSize(w,h);
 

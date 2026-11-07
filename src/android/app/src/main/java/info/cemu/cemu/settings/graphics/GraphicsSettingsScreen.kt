@@ -37,6 +37,12 @@ fun GraphicsSettingsScreen(navigateBack: () -> Unit, goToCustomDriversSettings: 
             initialCheckedState = NativeSettings::getAsyncShaderCompile,
             onCheckedChanged = NativeSettings::setAsyncShaderCompile,
         )
+        Toggle(
+            label = tr("Pin emulation to performance cores"),
+            description = tr("Keeps the emulated CPU cores and the GPU thread on the big CPU cores. Experimental: may help or hurt depending on the device and game. Takes effect on the next game start."),
+            initialCheckedState = NativeSettings::getPinPerformanceCores,
+            onCheckedChanged = NativeSettings::setPinPerformanceCores,
+        )
         SingleSelection(
             label = tr("VSync"),
             initialChoice = NativeSettings::getVsyncMode,

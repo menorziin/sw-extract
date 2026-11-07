@@ -19,6 +19,12 @@ object NativeSettings {
     @JvmStatic
     external fun setAsyncShaderCompile(value: Boolean)
 
+    @JvmStatic
+    external fun getPinPerformanceCores(): Boolean
+
+    @JvmStatic
+    external fun setPinPerformanceCores(value: Boolean)
+
     object VSyncMode {
         const val OFF: Int = 0
         const val DOUBLE_BUFFERING: Int = 1

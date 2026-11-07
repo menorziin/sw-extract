@@ -460,6 +460,7 @@ struct CemuConfig
 	ConfigValue<bool> gx2drawdone_sync { true };
 	ConfigValue<bool> render_upside_down{ false };
 	ConfigValue<bool> async_compile{ true };
+	ConfigValue<bool> pin_performance_cores{ false }; // Android: keep emulation threads on the big cores
 #ifdef ENABLE_METAL
 	ConfigValue<bool> force_mesh_shaders{ false };
 #endif
