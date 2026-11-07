@@ -10,7 +10,9 @@ import android.provider.DocumentsContract
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -92,6 +95,7 @@ fun GamesListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val gameSearchQuery by gamesListViewModel.filterText.collectAsStateWithLifecycle()
     val games by gamesListViewModel.games.collectAsStateWithLifecycle()
+    val sortMode by gamesListViewModel.sortMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val state = rememberPullToRefreshState()
@@ -166,6 +170,11 @@ fun GamesListScreen(
                     },
                 ),
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+            SortModeChips(
+                sortMode = sortMode,
+                onSortModeChange = gamesListViewModel::setSortMode,
+            )
             GameList(
                 games = games,
                 setFavorite = gamesListViewModel::setGameTitleFavorite,
@@ -185,6 +194,7 @@ fun GamesListScreen(
                     }
                 },
             )
+            }
 
             PullToRefreshDefaults.Indicator(
                 modifier = Modifier.align(Alignment.TopCenter),
@@ -192,6 +202,35 @@ fun GamesListScreen(
                 state = state,
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SortModeChips(
+    sortMode: GameSortMode,
+    onSortModeChange: (GameSortMode) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        GameSortMode.entries.forEach { mode ->
+            FilterChip(
+                selected = mode == sortMode,
+                onClick = { onSortModeChange(mode) },
+                label = {
+                    Text(
+                        when (mode) {
+                            GameSortMode.Name -> tr("Name")
+                            GameSortMode.LastPlayed -> tr("Last played")
+                            GameSortMode.PlayTime -> tr("Play time")
+                        }
+                    )
+                },
             )
         }
     }

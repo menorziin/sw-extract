@@ -1,6 +1,8 @@
 package info.cemu.cemu.games.list
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import info.cemu.cemu.nativeinterface.NativeGameTitles
 import info.cemu.cemu.nativeinterface.NativeGameTitles.Game
@@ -10,10 +12,27 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class GamesListViewModel : ViewModel() {
+enum class GameSortMode {
+    Name,
+    LastPlayed,
+    PlayTime,
+}
+
+class GamesListViewModel(application: Application) : AndroidViewModel(application) {
+    private val preferences = application.getSharedPreferences("games_list", Context.MODE_PRIVATE)
+
+    private val _sortMode = MutableStateFlow(
+        GameSortMode.entries.firstOrNull { it.name == preferences.getString(SORT_MODE_KEY, null) }
+            ?: GameSortMode.Name
+    )
+    val sortMode = _sortMode.asStateFlow()
+    fun setSortMode(sortMode: GameSortMode) {
+        _sortMode.value = sortMode
+        preferences.edit().putString(SORT_MODE_KEY, sortMode.name).apply()
+    }
+
     private var gamePaths = NativeSettings.getGamesPaths().toSet()
 
     private val _filterText = MutableStateFlow("")
@@ -23,14 +42,13 @@ class GamesListViewModel : ViewModel() {
     }
 
     private val _games = MutableStateFlow<Set<Game>>(emptySet())
-    val games: StateFlow<List<Game>> = combine(_filterText, _games) { filter, games ->
-        if (filter.isBlank()) {
+    val games: StateFlow<List<Game>> = combine(_filterText, _games, _sortMode) { filter, games, sortMode ->
+        val filtered = if (filter.isBlank()) {
             games
         } else {
             games.filter { it.name?.contains(filter, true) ?: false }
         }
-    }.map {
-        it.sorted()
+        sortGames(filtered, sortMode)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -73,6 +91,29 @@ class GamesListViewModel : ViewModel() {
             return true
         }
         return false
+    }
+
+    companion object {
+        private const val SORT_MODE_KEY = "sort_mode"
+
+        private fun lastPlayedKey(game: Game): Int =
+            game.lastPlayedYear * 10000 + game.lastPlayedMonth * 100 + game.lastPlayedDay
+
+        // Favorites stay on top in every mode; ties fall back to the name order.
+        fun sortGames(games: Collection<Game>, sortMode: GameSortMode): List<Game> = when (sortMode) {
+            GameSortMode.Name -> games.sorted()
+            GameSortMode.LastPlayed -> games.sortedWith(
+                compareByDescending<Game> { it.isFavorite }
+                    .thenByDescending { lastPlayedKey(it) }
+                    .then(naturalOrder())
+            )
+
+            GameSortMode.PlayTime -> games.sortedWith(
+                compareByDescending<Game> { it.isFavorite }
+                    .thenByDescending { it.minutesPlayed }
+                    .then(naturalOrder())
+            )
+        }
     }
 
     fun refreshGames() {
