@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Caixa aberta com seta saindo: "extrair". -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#4FC3F7"
+        android:pathData="M32,52 L76,52 L76,76 Q76,80 72,80 L36,80 Q32,80 32,76 Z" />
+    <path
+        android:fillColor="#0288D1"
+        android:pathData="M28,46 L80,46 L80,54 L28,54 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,24 L68,40 L59,40 L59,50 L49,50 L49,40 L40,40 Z" />
+    <path
+        android:fillColor="#1E2A38"
+        android:pathData="M44,62 L64,62 L64,66 L44,66 Z" />
+</vector>
