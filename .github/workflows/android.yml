@@ -9,6 +9,12 @@ on:
       - "*.md"
   workflow_dispatch:
 
+# packages: write deixa o vcpkg salvar as dependências prontas no GitHub Packages;
+# sem isso todas são recompiladas a cada build.
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-android:
     runs-on: ubuntu-24.04
@@ -35,6 +41,15 @@ jobs:
             msgunfmt $mo_file -o $po_file || echo "Failed to uncompile message catalog from $mo_file"
           done
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-arm64
+          max-size: 2G
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Setup vcpkg binary cache
         uses: ./.github/actions/set-up-vcpkg-binary-cache-action
         with:
@@ -46,6 +61,10 @@ jobs:
           ANDROID_STORE_FILE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           ANDROID_KEY_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          USE_CCACHE: "1"
+          CCACHE_BASEDIR: ${{ github.workspace }}
+          CCACHE_NOHASHDIR: "true"
+          CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime,include_file_ctime
         run: |
           export JAVA_HOME=$JAVA_HOME_21_X64
           cd ./src/android

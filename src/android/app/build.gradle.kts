@@ -123,6 +123,15 @@ android {
                     "-DENABLE_NSYSHID_LIBUSB=OFF",
                     "-DENABLE_WAYLAND=OFF",
                 )
+                // CI: reaproveita objetos já compilados entre builds.
+                if (System.getenv("USE_CCACHE") != null) {
+                    arguments.addAll(
+                        arrayOf(
+                            "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
+                            "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
+                        )
+                    )
+                }
                 if (versionMajor != null && versionMinor != null) {
                     arguments.addAll(
                         arrayOf(
