@@ -118,7 +118,7 @@ private fun Screen(vm: ExtractViewModel) {
     ) {
         Text("NX Extract", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Extrai o ExeFS e o RomFS de NSP, XCI ou NCA.",
+            "Extrai o ExeFS e o RomFS de NSP, XCI ou NCA, ou tira o update e deixa só o jogo base.",
             style = MaterialTheme.typography.bodyMedium,
         )
 
@@ -179,6 +179,15 @@ private fun Screen(vm: ExtractViewModel) {
                     (state.exefs || state.romfs),
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Extrair") }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = state.keepDlc, onCheckedChange = vm::setKeepDlc)
+                Text("Manter DLC no NSP base")
+            }
+            OutlinedButton(
+                onClick = vm::baseOnly,
+                enabled = state.romUri != null && state.keysInfo != null && hasAllFiles,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Tirar o update (NSP só com o jogo base)") }
         }
 
         LogView(state.log, Modifier.weight(1f))
@@ -196,7 +205,7 @@ private fun Screen(vm: ExtractViewModel) {
         AlertDialog(
             onDismissRequest = vm::dismissMessages,
             confirmButton = { TextButton(onClick = vm::dismissMessages) { Text("OK") } },
-            title = { Text("Extração") },
+            title = { Text("Concluído") },
             text = { SelectionContainer { Text(msg) } },
         )
     }

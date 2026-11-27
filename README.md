@@ -20,6 +20,15 @@ NXExtract/
 
 A tela fica acesa durante a extração. Dá para cancelar a qualquer momento.
 
+## Tirar o update (NSP só com o jogo base)
+
+Para um NSP ou XCI que traz o jogo base e o update juntos, **Tirar o update** grava `<nome> [base].nsp` na pasta de saída só com o jogo base
+(marque **Manter DLC no NSP base** para levar as DLCs junto). Os NCAs são copiados como estão, sem decifrar nem cifrar de novo: o `prod.keys`
+só serve para ler os metadados (`.cnmt`) e saber qual arquivo é do base e qual é do update. Os tickets e certificados do update ficam de fora.
+
+Só funciona quando o update está em NCAs separados dentro do arquivo. Se o update já foi mesclado no base (como nos NSPs do NSP Box), os
+arquivos originais do base não estão mais lá e o app avisa que não dá.
+
 ## Chaves usadas
 
 | Situação | Chaves |

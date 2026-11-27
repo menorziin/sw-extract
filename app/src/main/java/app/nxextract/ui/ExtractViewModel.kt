@@ -7,6 +7,7 @@ import android.os.SystemClock
 import android.provider.OpenableColumns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.nxextract.core.BaseOnly
 import app.nxextract.core.Extractor
 import app.nxextract.core.Keys
 import app.nxextract.core.NxException
@@ -27,6 +28,7 @@ data class UiState(
     val romName: String? = null,
     val exefs: Boolean = true,
     val romfs: Boolean = true,
+    val keepDlc: Boolean = false,
     val outDir: String = File(Environment.getExternalStorageDirectory(), "NXExtract").path,
     val running: Boolean = false,
     val progress: Float = 0f,
@@ -86,6 +88,7 @@ class ExtractViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setExefs(v: Boolean) = _state.update { it.copy(exefs = v) }
     fun setRomfs(v: Boolean) = _state.update { it.copy(romfs = v) }
+    fun setKeepDlc(v: Boolean) = _state.update { it.copy(keepDlc = v) }
     fun setOutDir(v: String) = _state.update { it.copy(outDir = v) }
     fun dismissMessages() = _state.update { it.copy(finished = null, error = null) }
 
@@ -93,7 +96,12 @@ class ExtractViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun log(msg: String) = _state.update { it.copy(log = (it.log + msg).takeLast(300)) }
 
-    fun extract() {
+    fun extract() = start(baseOnly = false)
+
+    /** Grava um NSP só com o jogo base (e as DLCs, se marcado), sem o update. */
+    fun baseOnly() = start(baseOnly = true)
+
+    private fun start(baseOnly: Boolean) {
         val s = _state.value
         val uri = s.romUri ?: return
         if (s.running) return
@@ -136,11 +144,16 @@ class ExtractViewModel(app: Application) : AndroidViewModel(app) {
                     ?: throw NxException("Não consegui abrir o arquivo.")
                 pfd.use {
                     FileInputStream(it.fileDescriptor).channel.use { ch ->
-                        val opts = Extractor.Options().apply { exefs = s.exefs; romfs = s.romfs }
-                        val result = Extractor(keys, listener).extract(Storage.FileStorage(ch), s.romName ?: "rom", out, opts)
-                        val secs = (SystemClock.elapsedRealtime() - started) / 1000
-                        val msg = if (result.cancelled) "Cancelado."
-                        else "Pronto em ${secs}s:\n" + result.outputs.joinToString("\n") { f -> f.path }
+                        val secs = { (SystemClock.elapsedRealtime() - started) / 1000 }
+                        val msg = if (baseOnly) {
+                            val r = BaseOnly(keys, listener).run(Storage.FileStorage(ch), s.romName ?: "rom", out, s.keepDlc)
+                            if (r.cancelled) "Cancelado." else "Pronto em ${secs()}s:\n${r.output.path}"
+                        } else {
+                            val opts = Extractor.Options().apply { exefs = s.exefs; romfs = s.romfs }
+                            val result = Extractor(keys, listener).extract(Storage.FileStorage(ch), s.romName ?: "rom", out, opts)
+                            if (result.cancelled) "Cancelado."
+                            else "Pronto em ${secs()}s:\n" + result.outputs.joinToString("\n") { f -> f.path }
+                        }
                         log(msg)
                         _state.update { st -> st.copy(finished = msg) }
                     }
